@@ -247,7 +247,7 @@ type ClientSession interface {
 	ResourceControllerAPIV2() (controllerv2.ResourceControllerAPIV2, error)
 	BackupRecoveryV1() (*backuprecoveryv1.BackupRecoveryV1, error)
 	BackupRecoveryV1Connector() (*backuprecoveryv1.BackupRecoveryV1Connector, error)
-	IBMCloudLogsRoutingV0() (*ibmcloudlogsroutingv0.IBMCloudLogsRoutingV0, error)
+	LogsRoutingV0() (*ibmcloudlogsroutingv0.IbmCloudLogsRoutingV0, error)
 	SoftLayerSession() *slsession.Session
 	IBMPISession() (*ibmpisession.IBMPISession, error)
 	UserManagementAPI() (usermanagementv2.UserManagementAPI, error)
@@ -680,7 +680,7 @@ type clientSession struct {
 	logsClientErr error
 
 	// Logs Routing
-	ibmCloudLogsRoutingClient    *ibmcloudlogsroutingv0.IBMCloudLogsRoutingV0
+	ibmCloudLogsRoutingClient    *ibmcloudlogsroutingv0.IbmCloudLogsRoutingV0
 	ibmCloudLogsRoutingClientErr error
 
 	// db2 saas
@@ -1323,7 +1323,7 @@ func (session clientSession) LogsV0() (*logsv0.LogsV0, error) {
 }
 
 // IBM Cloud Logs Routing
-func (session clientSession) IBMCloudLogsRoutingV0() (*ibmcloudlogsroutingv0.IBMCloudLogsRoutingV0, error) {
+func (session clientSession) LogsRoutingV0() (*ibmcloudlogsroutingv0.IbmCloudLogsRoutingV0, error) {
 	return session.ibmCloudLogsRoutingClient, session.ibmCloudLogsRoutingClientErr
 }
 
@@ -1757,13 +1757,13 @@ func (c *Config) ClientSession() (interface{}, error) {
 	if logsrouterURLErr != nil {
 		logsrouterClientURL = ibmcloudlogsroutingv0.DefaultServiceURL
 	}
-	ibmCloudLogsRoutingClientOptions := &ibmcloudlogsroutingv0.IBMCloudLogsRoutingV0Options{
+	ibmCloudLogsRoutingClientOptions := &ibmcloudlogsroutingv0.IbmCloudLogsRoutingV0Options{
 		Authenticator: authenticator,
 		URL:           logsrouterClientURL,
 	}
 
 	// Construct the service client.
-	session.ibmCloudLogsRoutingClient, err = ibmcloudlogsroutingv0.NewIBMCloudLogsRoutingV0(ibmCloudLogsRoutingClientOptions)
+	session.ibmCloudLogsRoutingClient, err = ibmcloudlogsroutingv0.NewIbmCloudLogsRoutingV0(ibmCloudLogsRoutingClientOptions)
 	if err == nil {
 		// Enable retries for API calls
 		session.ibmCloudLogsRoutingClient.Service.EnableRetries(c.RetryCount, c.RetryDelay)

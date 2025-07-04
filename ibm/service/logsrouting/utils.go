@@ -11,7 +11,7 @@ import (
 )
 
 // Clones the logs routing client and sets the correct URL. Public, private, or custom
-func updateClientURLWithEndpoint(logsRoutingClient *ibmcloudlogsroutingv0.IBMCloudLogsRoutingV0, d *schema.ResourceData, sess *bxsession.Session) (*ibmcloudlogsroutingv0.IBMCloudLogsRoutingV0, string, error) {
+func updateClientURLWithEndpoint(logsRoutingClient *ibmcloudlogsroutingv0.IbmCloudLogsRoutingV0, d *schema.ResourceData, sess *bxsession.Session) (*ibmcloudlogsroutingv0.IbmCloudLogsRoutingV0, string, error) {
 
 	var newServiceURL string
 	originalConfigServiceURL := logsRoutingClient.GetServiceURL()
@@ -25,7 +25,7 @@ func updateClientURLWithEndpoint(logsRoutingClient *ibmcloudlogsroutingv0.IBMClo
 		newServiceURL = replaceRegion(originalConfigServiceURL, region)
 	}
 
-	newClient := &ibmcloudlogsroutingv0.IBMCloudLogsRoutingV0{
+	newClient := &ibmcloudlogsroutingv0.IbmCloudLogsRoutingV0{
 		Service: logsRoutingClient.Service.Clone(),
 	}
 

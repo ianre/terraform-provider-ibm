@@ -1076,8 +1076,8 @@ func Provider() *schema.Provider {
 			"ibm_logs_streams":            logs.AddLogsInstanceFields(logs.DataSourceIbmLogsStreams()),
 
 			// Logs Router Service
-			"ibm_logs_router_tenants": logsrouting.DataSourceIBMLogsRouterTenants(),
-			"ibm_logs_router_targets": logsrouting.DataSourceIBMLogsRouterTargets(),
+			//"ibm_logs_router_tenants": logsrouting.DataSourceIBMLogsRouterTenants(),
+			//"ibm_logs_router_targets": logsrouting.DataSourceIBMLogsRouterTargets(),
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
@@ -1736,7 +1736,7 @@ func Provider() *schema.Provider {
 			"ibm_logs_stream":             logs.AddLogsInstanceFields(logs.ResourceIbmLogsStream()),
 
 			// Logs Router Service
-			"ibm_logs_router_tenant": logsrouting.ResourceIBMLogsRouterTenant(),
+			"ibm_logs_router_tenant": logsrouting.ResourceIbmLogsRouterTenant(),
 		},
 
 		ConfigureFunc: providerConfigure,
@@ -2239,7 +2239,7 @@ func Validator() validate.ValidatorDict {
 				"ibm_logs_stream":           logs.ResourceIbmLogsStreamValidator(),
 
 				// Added for Logs Router Service
-				"ibm_logs_router_tenant": logsrouting.ResourceIBMLogsRouterTenantValidator(),
+				"ibm_logs_router_tenant": logsrouting.ResourceIbmLogsRouterTenantValidator(),
 
 				// Added for Software Defined Storage as a Service
 				"ibm_sds_volume":         sdsaas.ResourceIBMSdsVolumeValidator(),
