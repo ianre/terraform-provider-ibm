@@ -1,0 +1,33 @@
+ terraform-provider-logs-router git:(main) ✗ ./scripts/add-terraform-annotations.sh
+=== Adding Terraform Annotations to API Definition ===
+
+Creating backup...
+✓ Backup created: /Users/ianre/go/src/github.ibm.com/cloud-api-docs/logs-router/logs-router-service-api.v1.json.backup-20260316-164112
+
+✓ Added x-codegen-config to info section
+✓ Added x-resource-name to Tenant schema
+✓ Added x-data-source-name to TenantCollection schema
+✓ Added x-data-source-name to TargetCollection schema
+
+✓ API definition updated successfully
+
+=== Annotations Added Successfully ===
+
+Changes made:
+1. Added x-codegen-config with Go SDK package path
+2. Added x-resource-name to Tenant schema
+3. Added x-data-source-name to TenantCollection schema
+4. Added x-data-source-name to TargetCollection schema
+
+Backup location: /Users/ianre/go/src/github.ibm.com/cloud-api-docs/logs-router/logs-router-service-api.v1.json.backup-20260316-164112
+
+Next steps:
+1. Review the changes:
+   diff /Users/ianre/go/src/github.ibm.com/cloud-api-docs/logs-router/logs-router-service-api.v1.json.backup-20260316-164112 /Users/ianre/go/src/github.ibm.com/cloud-api-docs/logs-router/logs-router-service-api.v1.json
+
+2. Regenerate Terraform provider:
+   cd /Users/ianre/go/src/github.ibm.com/Observability/terraform-provider-logs-router
+   ./scripts/generate-terraform.sh
+
+3. If you need to revert:
+   cp /Users/ianre/go/src/github.ibm.com/cloud-api-docs/logs-router/logs-router-service-api.v1.json.backup-20260316-164112 /Users/ianre/go/src/github.ibm.com/cloud-api-docs/logs-router/logs-router-service-api.v1.json

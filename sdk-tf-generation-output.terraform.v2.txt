@@ -1,0 +1,93 @@
+➜  terraform-provider-logs-router git:(main) ✗ ./scripts/generate-terraform.sh
+=== IBM Cloud Logs Router - Terraform Provider Generation ===
+
+API Definition: /Users/ianre/go/src/github.ibm.com/cloud-api-docs/logs-router/logs-router-service-api.v1.json
+Terraform Output: /Users/ianre/go/src/github.ibm.com/Observability/terraform-provider-logs-router
+Generator: openapi-sdkgen.sh
+
+Generate Terraform provider? (y/n) y
+Generating Terraform provider...
+[INFO ] c.i.s.c.IBMDefaultCodegen: IBM OpenAPI SDK Generator v3.112.0 (ibm-terraform)
+[INFO ] c.i.s.c.IBMDefaultCodegen: Flattened primitive schema reference '#/components/schemas/Host' at location components.schemas.TargetParametersPatch.properties.host
+[INFO ] c.i.s.c.IBMDefaultCodegen: Flattened primitive schema reference '#/components/schemas/Port' at location components.schemas.TargetParametersPatch.properties.port
+[INFO ] c.i.s.c.IBMDefaultCodegen: Flattened primitive schema reference '#/components/schemas/NameTenant' at location components.schemas.TenantPrototype.properties.name
+[INFO ] c.i.s.c.IBMDefaultCodegen: Flattened primitive schema reference '#/components/schemas/IdTarget' at location components.schemas.Target.properties.id
+[INFO ] c.i.s.c.IBMDefaultCodegen: Flattened primitive schema reference '#/components/schemas/NameTarget' at location components.schemas.Target.properties.name
+[INFO ] c.i.s.c.IBMDefaultCodegen: Flattened primitive schema reference '#/components/schemas/ETag' at location components.schemas.Target.properties.etag
+[INFO ] c.i.s.c.IBMDefaultCodegen: Flattened primitive schema reference '#/components/schemas/CreatedAtTarget' at location components.schemas.Target.properties.created_at
+[INFO ] c.i.s.c.IBMDefaultCodegen: Flattened primitive schema reference '#/components/schemas/UpdatedAtTarget' at location components.schemas.Target.properties.updated_at
+[INFO ] c.i.s.c.IBMDefaultCodegen: Flattened primitive schema reference '#/components/schemas/IdTenant' at location components.schemas.Tenant.properties.id
+[INFO ] c.i.s.c.IBMDefaultCodegen: Flattened primitive schema reference '#/components/schemas/CreatedAtTenant' at location components.schemas.Tenant.properties.created_at
+[INFO ] c.i.s.c.IBMDefaultCodegen: Flattened primitive schema reference '#/components/schemas/UpdatedAtTenant' at location components.schemas.Tenant.properties.updated_at
+[INFO ] c.i.s.c.IBMDefaultCodegen: Flattened primitive schema reference '#/components/schemas/CrnTenant' at location components.schemas.Tenant.properties.crn
+[INFO ] c.i.s.c.IBMDefaultCodegen: Flattened primitive schema reference '#/components/schemas/NameTenant' at location components.schemas.Tenant.properties.name
+[INFO ] c.i.s.c.IBMDefaultCodegen: Flattened primitive schema reference '#/components/schemas/ETag' at location components.schemas.Tenant.properties.etag
+[INFO ] c.i.s.c.IBMDefaultCodegen: Flattened primitive schema reference '#/components/schemas/LogSinkCrn' at location components.schemas.TargetTypeLogs.properties.log_sink_crn
+[INFO ] c.i.s.c.IBMDefaultCodegen: Flattened primitive schema reference '#/components/schemas/Host' at location components.schemas.TargetParametersTypeLogsPrototype.properties.host
+[INFO ] c.i.s.c.IBMDefaultCodegen: Flattened primitive schema reference '#/components/schemas/Port' at location components.schemas.TargetParametersTypeLogsPrototype.properties.port
+[INFO ] c.i.s.c.IBMDefaultCodegen: Flattened primitive schema reference '#/components/schemas/NameTarget' at location components.schemas.TargetPatch.properties.name
+[INFO ] c.i.s.c.IBMDefaultCodegen: Flattened primitive schema reference '#/components/schemas/LogSinkCrn' at location components.schemas.TargetPatch.properties.log_sink_crn
+[INFO ] c.i.s.c.IBMDefaultCodegen: Flattened primitive schema reference '#/components/schemas/NameTarget' at location components.schemas.TargetPrototype.properties.name
+[INFO ] c.i.s.c.IBMDefaultCodegen: Flattened primitive schema reference '#/components/schemas/NameTenant' at location components.schemas.TenantPatch.properties.name
+[INFO ] c.i.s.c.IBMDefaultCodegen: Flattened primitive schema reference '#/components/schemas/LogSinkCrn' at location components.schemas.TargetTypeLogsPrototype.properties.log_sink_crn
+[INFO ] c.i.s.c.IBMDefaultCodegen: Flattened primitive schema reference '#/components/schemas/Host' at location components.schemas.TargetParametersTypeLogs.properties.host
+[INFO ] c.i.s.c.IBMDefaultCodegen: Flattened primitive schema reference '#/components/schemas/Port' at location components.schemas.TargetParametersTypeLogs.properties.port
+[INFO ] c.i.s.c.IBMDefaultCodegen: Flattened primitive schema reference '#/components/schemas/ApiVersion' at location paths./tenants.get.parameters.0.schema
+[INFO ] c.i.s.c.IBMDefaultCodegen: Flattened primitive schema reference '#/components/schemas/NameTenant' at location paths./tenants.get.parameters.1.schema
+[INFO ] c.i.s.c.IBMDefaultCodegen: Flattened primitive schema reference '#/components/schemas/ApiVersion' at location paths./tenants.post.parameters.0.schema
+[INFO ] c.i.s.c.IBMDefaultCodegen: Flattened primitive schema reference '#/components/schemas/ApiVersion' at location paths./tenants/{tenant_id}.get.parameters.0.schema
+[INFO ] c.i.s.c.IBMDefaultCodegen: Flattened primitive schema reference '#/components/schemas/IdTenant' at location paths./tenants/{tenant_id}.get.parameters.1.schema
+[INFO ] c.i.s.c.IBMDefaultCodegen: Flattened primitive schema reference '#/components/schemas/ETag' at location paths./tenants/{tenant_id}.patch.parameters.2.schema
+[INFO ] c.i.s.c.IBMDefaultCodegen: Flattened primitive schema reference '#/components/schemas/ApiVersion' at location paths./tenants/{tenant_id}/targets.get.parameters.0.schema
+[INFO ] c.i.s.c.IBMDefaultCodegen: Flattened primitive schema reference '#/components/schemas/IdTenant' at location paths./tenants/{tenant_id}/targets.get.parameters.1.schema
+[INFO ] c.i.s.c.IBMDefaultCodegen: Flattened primitive schema reference '#/components/schemas/NameTarget' at location paths./tenants/{tenant_id}/targets.get.parameters.2.schema
+[INFO ] c.i.s.c.IBMDefaultCodegen: Flattened primitive schema reference '#/components/schemas/ApiVersion' at location paths./tenants/{tenant_id}/targets.post.parameters.1.schema
+[INFO ] c.i.s.c.IBMDefaultCodegen: Flattened primitive schema reference '#/components/schemas/ApiVersion' at location paths./tenants/{tenant_id}/targets/{target_id}.get.parameters.0.schema
+[INFO ] c.i.s.c.IBMDefaultCodegen: Flattened primitive schema reference '#/components/schemas/IdTenant' at location paths./tenants/{tenant_id}/targets/{target_id}.get.parameters.1.schema
+[INFO ] c.i.s.c.IBMDefaultCodegen: Flattened primitive schema reference '#/components/schemas/IdTarget' at location paths./tenants/{tenant_id}/targets/{target_id}.get.parameters.2.schema
+[INFO ] c.i.s.c.IBMDefaultCodegen: Flattened primitive schema reference '#/components/schemas/ETag' at location paths./tenants/{tenant_id}/targets/{target_id}.patch.parameters.3.schema
+[INFO ] c.i.s.c.IBMDefaultCodegen: Updated child schema: TargetTypeLogs
+[INFO ] c.i.s.c.IBMDefaultCodegen: Added new child schema to API definition: TargetPrototype_TargetTypeLogsPrototype
+[WARN ] c.i.s.c.IBMOptionsModelCodegen: Operation 'create_tenant' does not specify the 'x-codegen-request-body-name' annotation.  Will use 'TenantPrototype' instead.
+[INFO ] c.i.s.c.IaCGeneratorHelper: Detected resource model Tenant, resource name = logs_router_tenant
+[INFO ] c.i.s.c.IaCGeneratorHelper: Detected datasource model TenantCollection, datasource name = logs_router_tenants
+[INFO ] c.i.s.c.IaCGeneratorHelper: Detected datasource model TargetCollection, datasource name = logs_router_targets
+[INFO ] c.i.s.c.IaCGeneratorHelper: Detected datasource model TenantCollection, datasource name = logs_router_tenants
+[INFO ] c.i.s.c.IaCGeneratorHelper: Detected resource model Tenant, resource name = logs_router_tenant
+[INFO ] c.i.s.c.IaCGeneratorHelper: Detected resource model Tenant, resource name = logs_router_tenant
+[INFO ] c.i.s.c.IaCGeneratorHelper: Detected resource model Tenant, resource name = logs_router_tenant
+[INFO ] c.i.s.c.IaCGeneratorHelper: Detected datasource model TargetCollection, datasource name = logs_router_targets
+[INFO ] c.i.s.c.IBMDefaultCodegen: Pruning unneeded model: Error
+[INFO ] c.i.s.c.IBMDefaultCodegen: Pruning unneeded model: ErrorContainer
+[INFO ] c.i.s.c.IBMDefaultCodegen: Pruning unneeded model: ErrorTarget
+[INFO ] c.i.s.c.IBMDefaultCodegen: Pruning unneeded model: TargetTypeLogsPrototype
+[INFO ] c.i.s.c.IBMDefaultCodegen: Pruning unneeded model: TenantPrototype
+[INFO ] c.i.s.c.IBMDefaultCodegen: Re-ordered operations according to input api definition: /Users/ianre/go/src/github.ibm.com/cloud-api-docs/logs-router/logs-router-service-api.v1.json
+[INFO ] c.i.s.c.IBMDefaultCodegen: Using default service URL: https://management.private.us-east.logs-router.cloud.ibm.com/v1
+[INFO ] c.i.s.c.IBMGenerator    : writing file /Users/ianre/go/src/github.ibm.com/Observability/terraform-provider-logs-router/ibm/service/ibmcloudlogsrouting/resource_ibm_logs_router_tenant.go
+[INFO ] c.i.s.c.IBMGenerator    : writing file /Users/ianre/go/src/github.ibm.com/Observability/terraform-provider-logs-router/ibm/service/ibmcloudlogsrouting/resource_ibm_logs_router_tenant_test.go
+[INFO ] c.i.s.c.IBMGenerator    : writing file /Users/ianre/go/src/github.ibm.com/Observability/terraform-provider-logs-router/website/docs/r/logs_router_tenant.html.markdown
+[INFO ] c.i.s.c.IBMGenerator    : writing file /Users/ianre/go/src/github.ibm.com/Observability/terraform-provider-logs-router/ibm/service/ibmcloudlogsrouting/data_source_ibm_logs_router_tenants.go
+[INFO ] c.i.s.c.IBMGenerator    : writing file /Users/ianre/go/src/github.ibm.com/Observability/terraform-provider-logs-router/ibm/service/ibmcloudlogsrouting/data_source_ibm_logs_router_tenants_test.go
+[INFO ] c.i.s.c.IBMGenerator    : writing file /Users/ianre/go/src/github.ibm.com/Observability/terraform-provider-logs-router/website/docs/d/logs_router_tenants.html.markdown
+[INFO ] c.i.s.c.IBMGenerator    : writing file /Users/ianre/go/src/github.ibm.com/Observability/terraform-provider-logs-router/ibm/service/ibmcloudlogsrouting/data_source_ibm_logs_router_targets.go
+[INFO ] c.i.s.c.IBMGenerator    : writing file /Users/ianre/go/src/github.ibm.com/Observability/terraform-provider-logs-router/ibm/service/ibmcloudlogsrouting/data_source_ibm_logs_router_targets_test.go
+[INFO ] c.i.s.c.IBMGenerator    : writing file /Users/ianre/go/src/github.ibm.com/Observability/terraform-provider-logs-router/website/docs/d/logs_router_targets.html.markdown
+[INFO ] c.i.s.c.IBMGenerator    : writing file /Users/ianre/go/src/github.ibm.com/Observability/terraform-provider-logs-router/examples/ibm-ibm-cloud-logs-routing/main.tf
+[INFO ] c.i.s.c.IBMGenerator    : writing file /Users/ianre/go/src/github.ibm.com/Observability/terraform-provider-logs-router/examples/ibm-ibm-cloud-logs-routing/outputs.tf
+[INFO ] c.i.s.c.IBMGenerator    : writing file /Users/ianre/go/src/github.ibm.com/Observability/terraform-provider-logs-router/examples/ibm-ibm-cloud-logs-routing/variables.tf
+[INFO ] c.i.s.c.IBMGenerator    : writing file /Users/ianre/go/src/github.ibm.com/Observability/terraform-provider-logs-router/examples/ibm-ibm-cloud-logs-routing/versions.tf
+[INFO ] c.i.s.c.IBMGenerator    : writing file /Users/ianre/go/src/github.ibm.com/Observability/terraform-provider-logs-router/examples/ibm-ibm-cloud-logs-routing/README.md
+[INFO ] c.i.s.c.IBMGenerator    : writing file /Users/ianre/go/src/github.ibm.com/Observability/terraform-provider-logs-router/ibm/service/ibmcloudlogsrouting/README.md
+[INFO ] o.o.c.AbstractGenerator : writing file /Users/ianre/go/src/github.ibm.com/Observability/terraform-provider-logs-router/.openapi-generator/VERSION
+
+Terraform provider generation complete!
+
+Next steps:
+1. cd /Users/ianre/go/src/github.ibm.com/Observability/terraform-provider-logs-router
+2. Review generated files
+3. Update go.mod if needed:
+   echo 'replace github.com/IBM/logs-router-go-sdk => /Users/ianre/go/src/github.com/IBM/logs-router-go-sdk' >> go.mod
+4. go mod tidy
+5. make build
+6. make testacc
