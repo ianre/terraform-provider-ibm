@@ -1,8 +1,8 @@
-// Copyright IBM Corp. 2024 All Rights Reserved.
+// Copyright IBM Corp. 2026 All Rights Reserved.
 // Licensed under the Mozilla Public License v2.0
 
 /*
- * IBM OpenAPI Terraform Generator Version: 3.90.1-64fd3296-20240515-180710
+ * IBM OpenAPI Terraform Generator Version: 3.112.0-f88e9264-20260220-115155
  */
 
 package logsrouting
@@ -13,21 +13,25 @@ import (
 	"log"
 	"time"
 
-	"github.com/go-openapi/strfmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/IBM-Cloud/terraform-provider-ibm/ibm/conns"
 	"github.com/IBM-Cloud/terraform-provider-ibm/ibm/flex"
 	"github.com/IBM/go-sdk-core/v5/core"
-	"github.com/IBM/logs-router-go-sdk/ibmcloudlogsroutingv0"
+	"github.com/IBM/logs-router-go-sdk/logsroutingv1"
 )
 
-func DataSourceIBMLogsRouterTargets() *schema.Resource {
+func DataSourceIbmLogsRouterTargets() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: DataSourceIBMLogsRouterTargetsRead,
+		ReadContext: dataSourceIbmLogsRouterTargetsRead,
 
 		Schema: map[string]*schema.Schema{
+			"ibm_api_version": &schema.Schema{
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "Requests the version of the API as of a date in the format YYYY-MM-DD. Any date up to the current date can be provided. Specify the current date to request the latest version.",
+			},
 			"tenant_id": &schema.Schema{
 				Type:        schema.TypeString,
 				Required:    true,
@@ -36,18 +40,12 @@ func DataSourceIBMLogsRouterTargets() *schema.Resource {
 			"name": &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Optional: Name of the tenant target.",
-			},
-			"region": {
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
-				Description: "The region where the tenant for these targets exist.",
+				Description: "The name for this tenant target. The name must be unique across all targets for this tenant.",
 			},
 			"targets": &schema.Schema{
 				Type:        schema.TypeList,
 				Computed:    true,
-				Description: "List of target of a tenant.",
+				Description: "List of targets of a tenant.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": &schema.Schema{
@@ -55,15 +53,10 @@ func DataSourceIBMLogsRouterTargets() *schema.Resource {
 							Computed:    true,
 							Description: "Unique ID of the target.",
 						},
-						"log_sink_crn": &schema.Schema{
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "Cloud resource name of the log-sink target instance.",
-						},
 						"name": &schema.Schema{
 							Type:        schema.TypeString,
 							Computed:    true,
-							Description: "The name for this tenant target. The name is unique across all targets for this tenant.",
+							Description: "The name for this tenant target. The name must be unique across all targets for this tenant.",
 						},
 						"etag": &schema.Schema{
 							Type:        schema.TypeString,
@@ -78,17 +71,22 @@ func DataSourceIBMLogsRouterTargets() *schema.Resource {
 						"created_at": &schema.Schema{
 							Type:        schema.TypeString,
 							Computed:    true,
-							Description: "Time stamp the target was originally created.",
+							Description: "Timestamp the target was originally created.",
 						},
 						"updated_at": &schema.Schema{
 							Type:        schema.TypeString,
 							Computed:    true,
-							Description: "Time stamp the target was last updated.",
+							Description: "Timestamp the target was last updated.",
+						},
+						"log_sink_crn": &schema.Schema{
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Cloud resource name of the log-sink target instance. Must be a valid CRN.",
 						},
 						"parameters": &schema.Schema{
 							Type:        schema.TypeList,
 							Computed:    true,
-							Description: "List of properties returned from a successful list operation for a log-sink of type IBM Log Analysis (logdna).",
+							Description: "List of properties returned from a successful list operation for a log-sink of type <b>logs</b> (IBM Cloud Logs).",
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"host": &schema.Schema{
@@ -111,98 +109,92 @@ func DataSourceIBMLogsRouterTargets() *schema.Resource {
 	}
 }
 
-// Make it a public function so that it can be called from the v1 and v3 combined datasource schema
-func DataSourceIBMLogsRouterTargetsRead(context context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	ibmCloudLogsRoutingClient, err := meta.(conns.ClientSession).IBMCloudLogsRoutingV0()
+func dataSourceIbmLogsRouterTargetsRead(context context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	logsRoutingClient, err := meta.(conns.ClientSession).LogsRoutingV1()
 	if err != nil {
-		// Error is coming from SDK client, so it doesn't need to be discriminated.
-		tfErr := flex.TerraformErrorf(err, err.Error(), "(Data) ibm_logs_router_targets", "read")
+		tfErr := flex.DiscriminatedTerraformErrorf(err, err.Error(), "(Data) ibm_logs-router_targets", "read", "initialize-client")
 		log.Printf("[DEBUG]\n%s", tfErr.GetDebugMessage())
 		return tfErr.GetDiag()
 	}
 
-	bxSession, err := meta.(conns.ClientSession).BluemixSession()
-	if err != nil {
-		tfErr := flex.TerraformErrorf(err, err.Error(), "ibm_logs_router_tenant", "create")
-		log.Printf("[DEBUG]\n%s", tfErr.GetDebugMessage())
-		return tfErr.GetDiag()
-	}
+	listTenantTargetsOptions := &logsroutingv1.ListTenantTargetsOptions{}
 
-	ibmCloudLogsRoutingClient, _, err = updateClientURLWithEndpoint(ibmCloudLogsRoutingClient, d, bxSession)
-
-	listTenantTargetsOptions := &ibmcloudlogsroutingv0.ListTenantTargetsOptions{}
-
+	listTenantTargetsOptions.SetIBMAPIVersion(d.Get("ibm_api_version").(string))
 	listTenantTargetsOptions.SetTenantID(core.UUIDPtr(strfmt.UUID(d.Get("tenant_id").(string))))
-	if _, ok := d.GetOk("name"); ok {
-		listTenantTargetsOptions.SetName(d.Get("name").(string))
-	}
 
-	if _, ok := d.GetOk("region"); ok {
-		listTenantTargetsOptions.SetRegion(d.Get("region").(string))
-	}
-
-	targetTypeCollection, _, err := ibmCloudLogsRoutingClient.ListTenantTargetsWithContextEndpoint(context, listTenantTargetsOptions)
+	targetCollection, _, err := logsRoutingClient.ListTenantTargetsWithContext(context, listTenantTargetsOptions)
 	if err != nil {
-		tfErr := flex.TerraformErrorf(err, fmt.Sprintf("ListTenantTargetsWithContext failed: %s", err.Error()), "(Data) ibm_logs_router_targets", "read")
+		tfErr := flex.TerraformErrorf(err, fmt.Sprintf("ListTenantTargetsWithContext failed: %s", err.Error()), "(Data) ibm_logs-router_targets", "read")
 		log.Printf("[DEBUG]\n%s", tfErr.GetDebugMessage())
 		return tfErr.GetDiag()
 	}
 
-	d.SetId(dataSourceIBMLogsRouterTargetsID(d))
+	// Use the provided filter argument and construct a new list with only the requested resource(s)
+	var matchTargets []logsroutingv1.Target
+	var name string
+	var suppliedFilter bool
 
-	targets := []map[string]interface{}{}
-	if targetTypeCollection.Targets != nil {
-		for _, modelItem := range targetTypeCollection.Targets {
-			modelMap, err := DataSourceIBMLogsRouterTargetsTargetTypeToMap(modelItem)
-			if err != nil {
-				return flex.DiscriminatedTerraformErrorf(err, err.Error(), "(Data) ibm_logs_router_targets", "read", "targets-to-map").GetDiag()
+	if v, ok := d.GetOk("name"); ok {
+		name = v.(string)
+		suppliedFilter = true
+		for _, data := range targetCollection.Targets {
+			if *data.Name == name {
+				matchTargets = append(matchTargets, data)
 			}
-			targets = append(targets, modelMap)
 		}
+	} else {
+		matchTargets = targetCollection.Targets
 	}
-	if err = d.Set("targets", targets); err != nil {
-		return flex.DiscriminatedTerraformErrorf(err, fmt.Sprintf("Error setting targets: %s", err), "(Data) ibm_logs_router_targets", "read", "set-targets").GetDiag()
+	targetCollection.Targets = matchTargets
+
+	if suppliedFilter {
+		if len(targetCollection.Targets) == 0 {
+			return flex.DiscriminatedTerraformErrorf(nil, fmt.Sprintf("no Targets found with name %s", name), "(Data) ibm_logs-router_targets", "read", "no-collection-found").GetDiag()
+		}
+		d.SetId(name)
+	} else {
+		d.SetId(dataSourceIbmLogsRouterTargetsID(d))
+	}
+
+	if !core.IsNil(targetCollection.Targets) {
+		targets := []map[string]interface{}{}
+		for _, targetsItem := range targetCollection.Targets {
+			targetsItemMap, err := DataSourceIbmLogsRouterTargetsTargetToMap(targetsItem) // #nosec G601
+			if err != nil {
+				return flex.DiscriminatedTerraformErrorf(err, err.Error(), "(Data) ibm_logs-router_targets", "read", "targets-to-map").GetDiag()
+			}
+			targets = append(targets, targetsItemMap)
+		}
+		if err = d.Set("targets", targets); err != nil {
+			return flex.DiscriminatedTerraformErrorf(err, fmt.Sprintf("Error setting targets: %s", err), "(Data) ibm_logs-router_targets", "read", "set-targets").GetDiag()
+		}
 	}
 
 	return nil
 }
 
-// dataSourceIBMLogsRouterTargetsID returns a reasonable ID for the list.
-func dataSourceIBMLogsRouterTargetsID(d *schema.ResourceData) string {
+// dataSourceIbmLogsRouterTargetsID returns a reasonable ID for the list.
+func dataSourceIbmLogsRouterTargetsID(d *schema.ResourceData) string {
 	return time.Now().UTC().String()
 }
 
-func DataSourceIBMLogsRouterTargetsTargetTypeToMap(model ibmcloudlogsroutingv0.TargetTypeIntf) (map[string]interface{}, error) {
-	if _, ok := model.(*ibmcloudlogsroutingv0.TargetTypeLogDna); ok {
-		return DataSourceIBMLogsRouterTargetsTargetTypeLogDnaToMap(model.(*ibmcloudlogsroutingv0.TargetTypeLogDna))
-	} else if _, ok := model.(*ibmcloudlogsroutingv0.TargetTypeLogs); ok {
-		return DataSourceIBMLogsRouterTargetsTargetTypeLogsToMap(model.(*ibmcloudlogsroutingv0.TargetTypeLogs))
-	} else if _, ok := model.(*ibmcloudlogsroutingv0.TargetType); ok {
+func DataSourceIbmLogsRouterTargetsTargetToMap(model logsroutingv1.TargetIntf) (map[string]interface{}, error) {
+	if _, ok := model.(*logsroutingv1.TargetTypeLogs); ok {
+		return DataSourceIbmLogsRouterTargetsTargetTypeLogsToMap(model.(*logsroutingv1.TargetTypeLogs))
+	} else if _, ok := model.(*logsroutingv1.Target); ok {
 		modelMap := make(map[string]interface{})
-		model := model.(*ibmcloudlogsroutingv0.TargetType)
-		if model.ID != nil {
-			modelMap["id"] = model.ID.String()
-		}
-		if model.LogSinkCRN != nil {
-			modelMap["log_sink_crn"] = *model.LogSinkCRN
-		}
-		if model.Name != nil {
-			modelMap["name"] = *model.Name
-		}
-		if model.Etag != nil {
-			modelMap["etag"] = *model.Etag
-		}
-		if model.Type != nil {
-			modelMap["type"] = *model.Type
-		}
-		if model.CreatedAt != nil {
-			modelMap["created_at"] = *model.CreatedAt
-		}
-		if model.UpdatedAt != nil {
-			modelMap["updated_at"] = *model.UpdatedAt
+		model := model.(*logsroutingv1.Target)
+		modelMap["id"] = model.ID.String()
+		modelMap["name"] = *model.Name
+		modelMap["etag"] = *model.Etag
+		modelMap["type"] = *model.Type
+		modelMap["created_at"] = model.CreatedAt.String()
+		modelMap["updated_at"] = model.UpdatedAt.String()
+		if model.LogSinkCrn != nil {
+			modelMap["log_sink_crn"] = *model.LogSinkCrn
 		}
 		if model.Parameters != nil {
-			parametersMap, err := DataSourceIBMLogsRouterTargetsTargetParametersTypeLogDnaToMap(model.Parameters)
+			parametersMap, err := DataSourceIbmLogsRouterTargetsTargetParametersTypeLogsToMap(model.Parameters)
 			if err != nil {
 				return modelMap, err
 			}
@@ -210,58 +202,30 @@ func DataSourceIBMLogsRouterTargetsTargetTypeToMap(model ibmcloudlogsroutingv0.T
 		}
 		return modelMap, nil
 	} else {
-		return nil, fmt.Errorf("Unrecognized ibmcloudlogsroutingv0.TargetTypeIntf subtype encountered")
+		return nil, fmt.Errorf("Unrecognized logsroutingv1.TargetIntf subtype encountered")
 	}
 }
 
-func DataSourceIBMLogsRouterTargetsTargetParametersTypeLogDnaToMap(model *ibmcloudlogsroutingv0.TargetParametersTypeLogDna) (map[string]interface{}, error) {
+func DataSourceIbmLogsRouterTargetsTargetParametersTypeLogsToMap(model *logsroutingv1.TargetParametersTypeLogs) (map[string]interface{}, error) {
 	modelMap := make(map[string]interface{})
 	modelMap["host"] = *model.Host
 	modelMap["port"] = flex.IntValue(model.Port)
 	return modelMap, nil
 }
 
-func DataSourceIBMLogsRouterTargetsTargetTypeLogDnaToMap(model *ibmcloudlogsroutingv0.TargetTypeLogDna) (map[string]interface{}, error) {
+func DataSourceIbmLogsRouterTargetsTargetTypeLogsToMap(model *logsroutingv1.TargetTypeLogs) (map[string]interface{}, error) {
 	modelMap := make(map[string]interface{})
 	modelMap["id"] = model.ID.String()
-	modelMap["log_sink_crn"] = *model.LogSinkCRN
 	modelMap["name"] = *model.Name
 	modelMap["etag"] = *model.Etag
 	modelMap["type"] = *model.Type
-	modelMap["created_at"] = *model.CreatedAt
-	modelMap["updated_at"] = *model.UpdatedAt
-	if model.Parameters != nil {
-		parametersMap, err := DataSourceIBMLogsRouterTargetsTargetParametersTypeLogDnaToMap(model.Parameters)
-		if err != nil {
-			return modelMap, err
-		}
-		modelMap["parameters"] = []map[string]interface{}{parametersMap}
+	modelMap["created_at"] = model.CreatedAt.String()
+	modelMap["updated_at"] = model.UpdatedAt.String()
+	modelMap["log_sink_crn"] = *model.LogSinkCrn
+	parametersMap, err := DataSourceIbmLogsRouterTargetsTargetParametersTypeLogsToMap(model.Parameters)
+	if err != nil {
+		return modelMap, err
 	}
-	return modelMap, nil
-}
-
-func DataSourceIBMLogsRouterTargetsTargetTypeLogsToMap(model *ibmcloudlogsroutingv0.TargetTypeLogs) (map[string]interface{}, error) {
-	modelMap := make(map[string]interface{})
-	modelMap["id"] = model.ID.String()
-	modelMap["log_sink_crn"] = *model.LogSinkCRN
-	modelMap["name"] = *model.Name
-	modelMap["etag"] = *model.Etag
-	modelMap["type"] = *model.Type
-	modelMap["created_at"] = *model.CreatedAt
-	modelMap["updated_at"] = *model.UpdatedAt
-	if model.Parameters != nil {
-		parametersMap, err := DataSourceIBMLogsRouterTargetsTargetParametersTypeLogsToMap(model.Parameters)
-		if err != nil {
-			return modelMap, err
-		}
-		modelMap["parameters"] = []map[string]interface{}{parametersMap}
-	}
-	return modelMap, nil
-}
-
-func DataSourceIBMLogsRouterTargetsTargetParametersTypeLogsToMap(model *ibmcloudlogsroutingv0.TargetParametersTypeLogs) (map[string]interface{}, error) {
-	modelMap := make(map[string]interface{})
-	modelMap["host"] = *model.Host
-	modelMap["port"] = flex.IntValue(model.Port)
+	modelMap["parameters"] = []map[string]interface{}{parametersMap}
 	return modelMap, nil
 }

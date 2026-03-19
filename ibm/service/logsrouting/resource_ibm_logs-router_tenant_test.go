@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2024 All Rights Reserved.
+// Copyright IBM Corp. 2026 All Rights Reserved.
 // Licensed under the Mozilla Public License v2.0
 
 package logsrouting_test
@@ -7,165 +7,95 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/go-openapi/strfmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 
 	acc "github.com/IBM-Cloud/terraform-provider-ibm/ibm/acctest"
 	"github.com/IBM-Cloud/terraform-provider-ibm/ibm/conns"
 	"github.com/IBM-Cloud/terraform-provider-ibm/ibm/service/logsrouting"
 	. "github.com/IBM-Cloud/terraform-provider-ibm/ibm/unittest"
 	"github.com/IBM/go-sdk-core/v5/core"
-	"github.com/IBM/logs-router-go-sdk/ibmcloudlogsroutingv0"
+	"github.com/IBM/logs-router-go-sdk/logsroutingv1"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAccIBMLogsRouterTenantBasic(t *testing.T) {
-	var conf ibmcloudlogsroutingv0.Tenant
-	name := fmt.Sprintf("tf-name-%d", acctest.RandIntRange(10, 100))
-	host := fmt.Sprintf("www.example.%d.com", acctest.RandIntRange(10, 100))
-	crn := "crn:v1:bluemix:public:logs:eu-de:a/3516b8fa0a174a71899f5affa4f18d78:3517d2ed-9429-af34-ad52-34278391cbc8::"
-	nameUpdate := fmt.Sprintf("tf-name-%d", acctest.RandIntRange(10, 100))
-	hostUpdate := fmt.Sprintf("www.example.%d.com", acctest.RandIntRange(10, 100))
-	crnUpdate := "crn:v1:bluemix:public:logs:eu-de:a/3516b8fa0a174a71899f5affa4f18d78:3517d2ed-9429-af34-ad52-34278391cbc8::"
+func TestAccIbmLogsRouterTenantBasic(t *testing.T) {
+	var conf logsroutingv1.Tenant
+	ibmApiVersion := fmt.Sprintf("tf_ibm_api_version_%d", acctest.RandIntRange(10, 100))
+	name := fmt.Sprintf("tf_name_%d", acctest.RandIntRange(10, 100))
+	ibmApiVersionUpdate := fmt.Sprintf("tf_ibm_api_version_%d", acctest.RandIntRange(10, 100))
+	nameUpdate := fmt.Sprintf("tf_name_%d", acctest.RandIntRange(10, 100))
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		Providers:    acc.TestAccProviders,
-		CheckDestroy: testAccCheckIBMLogsRouterTenantDestroy,
+		CheckDestroy: testAccCheckIbmLogsRouterTenantDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccCheckIBMLogsRouterTenantConfigBasic(name, crn, host),
+				Config: testAccCheckIbmLogsRouterTenantConfigBasic(ibmApiVersion, name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIBMLogsRouterTenantExists("ibm_logs_router_tenant.logs_router_tenant_instance", conf),
-					resource.TestCheckResourceAttr("ibm_logs_router_tenant.logs_router_tenant_instance", "name", name),
+					testAccCheckIbmLogsRouterTenantExists("ibm_logs-router_tenant.logs_router_tenant_instance", conf),
+					resource.TestCheckResourceAttr("ibm_logs-router_tenant.logs_router_tenant_instance", "ibm_api_version", ibmApiVersion),
+					resource.TestCheckResourceAttr("ibm_logs-router_tenant.logs_router_tenant_instance", "name", name),
 				),
 			},
 			resource.TestStep{
-				Config: testAccCheckIBMLogsRouterTenantConfigBasic(nameUpdate, crnUpdate, hostUpdate),
+				Config: testAccCheckIbmLogsRouterTenantConfigBasic(ibmApiVersionUpdate, nameUpdate),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("ibm_logs_router_tenant.logs_router_tenant_instance", "name", nameUpdate),
+					resource.TestCheckResourceAttr("ibm_logs-router_tenant.logs_router_tenant_instance", "ibm_api_version", ibmApiVersionUpdate),
+					resource.TestCheckResourceAttr("ibm_logs-router_tenant.logs_router_tenant_instance", "name", nameUpdate),
 				),
 			},
 			resource.TestStep{
-				ResourceName:      "ibm_logs_router_tenant.logs_router_tenant_instance",
+				ResourceName:      "ibm_logs-router_tenant.logs_router_tenant_instance",
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateIdFunc: func(s *terraform.State) (string, error) {
-					rs, ok := s.RootModule().Resources["ibm_logs_router_tenant.logs_router_tenant_instance"]
-					if !ok {
-						return "", fmt.Errorf("Not found: %s", "ibm_logs_router_tenant.logs_router_tenant_instance")
-					}
-					return fmt.Sprintf("%s/%s", rs.Primary.ID, rs.Primary.Attributes["region"]), nil
-				},
-				ImportStateVerifyIgnore: []string{"targets.0.parameters.0.access_credential", "targets.1.parameters.0.access_credential"},
 			},
 		},
 	})
 }
 
-func TestAccIBMLogsRouterTenantAllArgs(t *testing.T) {
-	var conf ibmcloudlogsroutingv0.Tenant
-
-	name := fmt.Sprintf("tenant-name-%d", acctest.RandIntRange(10, 100))
-	host0 := fmt.Sprintf("www.example.%d.com", acctest.RandIntRange(10, 100))
-	port0 := acctest.RandIntRange(1, 9999)
-	target0Name := fmt.Sprintf("target-%s", acctest.RandString(4))
-
-	nameUpdate := fmt.Sprintf("tenant-name-%d", acctest.RandIntRange(10, 100))
-	host0Update := fmt.Sprintf("www.example.%d.com", acctest.RandIntRange(10, 100))
-	port0Update := acctest.RandIntRange(1, 9999)
-	target0NameUpdate := fmt.Sprintf("target-%s", acctest.RandString(4))
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		Providers:    acc.TestAccProviders,
-		CheckDestroy: testAccCheckIBMLogsRouterTenantDestroy,
-		Steps: []resource.TestStep{
-			resource.TestStep{
-				Config: testAccCheckIBMLogsRouterTenantConfigAllArgs(name, target0Name, host0, port0),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIBMLogsRouterTenantExists("ibm_logs_router_tenant.logs_router_tenant_instance", conf),
-					resource.TestCheckResourceAttr("ibm_logs_router_tenant.logs_router_tenant_instance", "name", name),
-				),
-			},
-			resource.TestStep{
-				Config: testAccCheckIBMLogsRouterTenantConfigAllArgs(nameUpdate, target0NameUpdate, host0Update, port0Update),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("ibm_logs_router_tenant.logs_router_tenant_instance", "name", nameUpdate),
-				),
-			},
-			resource.TestStep{
-				ResourceName:      "ibm_logs_router_tenant.logs_router_tenant_instance",
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateIdFunc: func(s *terraform.State) (string, error) {
-					rs, ok := s.RootModule().Resources["ibm_logs_router_tenant.logs_router_tenant_instance"]
-					if !ok {
-						return "", fmt.Errorf("Not found: %s", "ibm_logs_router_tenant.logs_router_tenant_instance")
-					}
-					return fmt.Sprintf("%s/%s", rs.Primary.ID, rs.Primary.Attributes["region"]), nil
-				},
-				ImportStateVerifyIgnore: []string{"targets.0.parameters.0.access_credential", "targets.1.parameters.0.access_credential"},
-			},
-		},
-	})
-}
-
-func testAccCheckIBMLogsRouterTenantConfigBasic(name string, crn string, host string) string {
+func testAccCheckIbmLogsRouterTenantConfigBasic(ibmApiVersion string, name string) string {
 	return fmt.Sprintf(`
-		resource "ibm_logs_router_tenant" "logs_router_tenant_instance" {
+		resource "ibm_logs-router_tenant" "logs_router_tenant_instance" {
+			ibm_api_version = "%s"
 			name = "%s"
-			region = "ca-tor"
 			targets {
-				log_sink_crn = "%s"
+				id = "9fab83da-98cb-4f18-a7ba-b6f0435c9673"
 				name = "my-log-sink"
+				etag = "822b4b5423e225206c1d75666595714a11925cd0f82b229839864443d6c3c049"
+				type = "logs"
+				created_at = "2024-06-20T18:30:00.143Z"
+				updated_at = "2024-06-20T18:30:00.143Z"
+				log_sink_crn = "crn:v1:bluemix:public:logs:eu-de:a/4516b8fa0a174a71899f5affa4f18d78:cfef55c6-cdfe-48c8-b882-aefc271532e4::"
 				parameters {
-					host = "%s"
+					host = "www.example.com"
 					port = 1
 				}
 			}
 		}
-		`, name, crn, host)
+	`, ibmApiVersion, name)
 }
 
-func testAccCheckIBMLogsRouterTenantConfigAllArgs(name string, target0Name string, host0 string, port0 int) string {
-	return fmt.Sprintf(`
-		resource "ibm_logs_router_tenant" "logs_router_tenant_instance" {
-			name = "%s"
-			region = "ca-tor"
-			targets {
-				log_sink_crn = "crn:v1:bluemix:public:logs:eu-de:a/3516b8fa0a174a71899f5affa4f18d78:3517d2ed-9429-af34-ad52-34278391cbc8::"
-				name = "%s"
-				parameters {
-					host = "%s"
-					port = %d
-				}
-			}
-		}
-		`, name, target0Name, host0, port0)
-}
+func testAccCheckIbmLogsRouterTenantExists(n string, obj logsroutingv1.Tenant) resource.TestCheckFunc {
 
-func testAccCheckIBMLogsRouterTenantExists(n string, obj ibmcloudlogsroutingv0.Tenant) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		ibmCloudLogsRoutingClient, err := acc.TestAccProvider.Meta().(conns.ClientSession).IBMCloudLogsRoutingV0()
+		logsRoutingClient, err := acc.TestAccProvider.Meta().(conns.ClientSession).LogsRoutingV1()
 		if err != nil {
 			return err
 		}
 
-		getTenantDetailOptions := &ibmcloudlogsroutingv0.GetTenantDetailOptions{}
+		getTenantDetailOptions := &logsroutingv1.GetTenantDetailOptions{}
 
-		tenantId := strfmt.UUID(rs.Primary.ID)
-		getTenantDetailOptions.SetTenantID(&tenantId)
-		getTenantDetailOptions.SetRegion(rs.Primary.Attributes["region"])
+		getTenantDetailOptions.SetTenantID(rs.Primary.ID)
 
-		tenant, _, err := ibmCloudLogsRoutingClient.GetTenantDetail(getTenantDetailOptions)
+		tenant, _, err := logsRoutingClient.GetTenantDetail(getTenantDetailOptions)
 		if err != nil {
 			return err
 		}
@@ -175,168 +105,72 @@ func testAccCheckIBMLogsRouterTenantExists(n string, obj ibmcloudlogsroutingv0.T
 	}
 }
 
-func testAccCheckIBMLogsRouterTenantDestroy(s *terraform.State) error {
-	ibmCloudLogsRoutingClient, err := acc.TestAccProvider.Meta().(conns.ClientSession).IBMCloudLogsRoutingV0()
+func testAccCheckIbmLogsRouterTenantDestroy(s *terraform.State) error {
+	logsRoutingClient, err := acc.TestAccProvider.Meta().(conns.ClientSession).LogsRoutingV1()
 	if err != nil {
 		return err
 	}
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "ibm_logs_router_tenant" {
+		if rs.Type != "ibm_logs-router_tenant" {
 			continue
 		}
 
-		getTenantDetailOptions := &ibmcloudlogsroutingv0.GetTenantDetailOptions{}
+		getTenantDetailOptions := &logsroutingv1.GetTenantDetailOptions{}
 
-		tenantId := strfmt.UUID(rs.Primary.ID)
-		getTenantDetailOptions.SetTenantID(&tenantId)
-		getTenantDetailOptions.SetRegion(rs.Primary.Attributes["region"])
+		getTenantDetailOptions.SetTenantID(rs.Primary.ID)
 
 		// Try to find the key
-		_, response, err := ibmCloudLogsRoutingClient.GetTenantDetail(getTenantDetailOptions)
+		_, response, err := logsRoutingClient.GetTenantDetail(getTenantDetailOptions)
 
 		if err == nil {
-			return fmt.Errorf("logs_router_tenant still exists: %s", rs.Primary.ID)
+			return fmt.Errorf("logs-router_tenant still exists: %s", rs.Primary.ID)
 		} else if response.StatusCode != 404 {
-			return fmt.Errorf("Error checking for logs_router_tenant (%s) has been destroyed: %s", rs.Primary.ID, err)
+			return fmt.Errorf("Error checking for logs-router_tenant (%s) has been destroyed: %s", rs.Primary.ID, err)
 		}
 	}
 
 	return nil
 }
 
-func TestResourceIBMLogsRouterTenantTargetTypeToMap(t *testing.T) {
-	checkResult := func(result map[string]interface{}) {
-		targetParametersTypeLogDnaModel := make(map[string]interface{})
-		targetParametersTypeLogDnaModel["host"] = "www.example.com"
-		targetParametersTypeLogDnaModel["port"] = int(1)
-
-		model := make(map[string]interface{})
-		model["id"] = "8717db99-2cfb-4ba6-a033-89c994c2e9f0"
-		model["log_sink_crn"] = "crn:v1:bluemix:public:logdna:eu-de:a/3516b8fa0a174a71899f5affa4f18d78:3517d2ed-9429-af34-ad52-34278391cbc8::"
-		model["name"] = "my-log-sink"
-		model["etag"] = "c3a43545a7f2675970671ac3a57b8db067a1866b2222e1b950ee8da612e347c6"
-		model["type"] = "logdna"
-		model["created_at"] = "2024-06-20T18:30:00.143156Z"
-		model["updated_at"] = "2024-06-20T18:30:00.143156Z"
-		model["parameters"] = []map[string]interface{}{targetParametersTypeLogDnaModel}
-
-		assert.Equal(t, result, model)
-	}
-
-	targetParametersTypeLogDnaModel := new(ibmcloudlogsroutingv0.TargetParametersTypeLogDna)
-	targetParametersTypeLogDnaModel.Host = core.StringPtr("www.example.com")
-	targetParametersTypeLogDnaModel.Port = core.Int64Ptr(int64(1))
-
-	model := new(ibmcloudlogsroutingv0.TargetType)
-	model.ID = CreateMockUUID("8717db99-2cfb-4ba6-a033-89c994c2e9f0")
-	model.LogSinkCRN = core.StringPtr("crn:v1:bluemix:public:logdna:eu-de:a/3516b8fa0a174a71899f5affa4f18d78:3517d2ed-9429-af34-ad52-34278391cbc8::")
-	model.Name = core.StringPtr("my-log-sink")
-	model.Etag = core.StringPtr("c3a43545a7f2675970671ac3a57b8db067a1866b2222e1b950ee8da612e347c6")
-	model.Type = core.StringPtr("logdna")
-	model.CreatedAt = core.StringPtr("2024-06-20T18:30:00.143156Z")
-	model.UpdatedAt = core.StringPtr("2024-06-20T18:30:00.143156Z")
-	model.Parameters = targetParametersTypeLogDnaModel
-
-	result, err := logsrouting.ResourceIBMLogsRouterTenantTargetTypeToMap(model)
-	assert.Nil(t, err)
-	checkResult(result)
-}
-
-func TestResourceIBMLogsRouterTenantTargetParametersTypeLogDnaToMap(t *testing.T) {
-	checkResult := func(result map[string]interface{}) {
-		model := make(map[string]interface{})
-		model["host"] = "www.example.com"
-		model["port"] = int(1)
-
-		assert.Equal(t, result, model)
-	}
-
-	model := new(ibmcloudlogsroutingv0.TargetParametersTypeLogDna)
-	model.Host = core.StringPtr("www.example.com")
-	model.Port = core.Int64Ptr(int64(1))
-
-	result, err := logsrouting.ResourceIBMLogsRouterTenantTargetParametersTypeLogDnaToMap(model)
-	assert.Nil(t, err)
-	checkResult(result)
-}
-
-func TestResourceIBMLogsRouterTenantTargetTypeLogDnaToMap(t *testing.T) {
-	checkResult := func(result map[string]interface{}) {
-		targetParametersTypeLogDnaModel := make(map[string]interface{})
-		targetParametersTypeLogDnaModel["host"] = "www.example.com"
-		targetParametersTypeLogDnaModel["port"] = int(8080)
-
-		model := make(map[string]interface{})
-		model["id"] = "8717db99-2cfb-4ba6-a033-89c994c2e9f0"
-		model["log_sink_crn"] = "crn:v1:bluemix:public:logdna:eu-de:a/3516b8fa0a174a71899f5affa4f18d78:3517d2ed-9429-af34-ad52-34278391cbc8::"
-		model["name"] = "my-log-sink"
-		model["etag"] = "c3a43545a7f2675970671ac3a57b8db067a1866b2222e1b950ee8da612e347c6"
-		model["type"] = "logdna"
-		model["created_at"] = "2024-06-20T18:30:00.143156Z"
-		model["updated_at"] = "2024-06-20T18:30:00.143156Z"
-		model["parameters"] = []map[string]interface{}{targetParametersTypeLogDnaModel}
-
-		assert.Equal(t, result, model)
-	}
-
-	targetParametersTypeLogDnaModel := new(ibmcloudlogsroutingv0.TargetParametersTypeLogDna)
-	targetParametersTypeLogDnaModel.Host = core.StringPtr("www.example.com")
-	targetParametersTypeLogDnaModel.Port = core.Int64Ptr(int64(8080))
-
-	model := new(ibmcloudlogsroutingv0.TargetTypeLogDna)
-	model.ID = CreateMockUUID("8717db99-2cfb-4ba6-a033-89c994c2e9f0")
-	model.LogSinkCRN = core.StringPtr("crn:v1:bluemix:public:logdna:eu-de:a/3516b8fa0a174a71899f5affa4f18d78:3517d2ed-9429-af34-ad52-34278391cbc8::")
-	model.Name = core.StringPtr("my-log-sink")
-	model.Etag = core.StringPtr("c3a43545a7f2675970671ac3a57b8db067a1866b2222e1b950ee8da612e347c6")
-	model.Type = core.StringPtr("logdna")
-	model.CreatedAt = core.StringPtr("2024-06-20T18:30:00.143156Z")
-	model.UpdatedAt = core.StringPtr("2024-06-20T18:30:00.143156Z")
-	model.Parameters = targetParametersTypeLogDnaModel
-
-	result, err := logsrouting.ResourceIBMLogsRouterTenantTargetTypeLogDnaToMap(model)
-	assert.Nil(t, err)
-	checkResult(result)
-}
-
-func TestResourceIBMLogsRouterTenantTargetTypeLogsToMap(t *testing.T) {
+func TestResourceIbmLogsRouterTenantTargetToMap(t *testing.T) {
 	checkResult := func(result map[string]interface{}) {
 		targetParametersTypeLogsModel := make(map[string]interface{})
 		targetParametersTypeLogsModel["host"] = "www.example.com"
 		targetParametersTypeLogsModel["port"] = int(8080)
 
 		model := make(map[string]interface{})
-		model["id"] = "8717db99-2cfb-4ba6-a033-89c994c2e9f0"
-		model["log_sink_crn"] = "crn:v1:bluemix:public:logs:eu-de:a/4516b8fa0a174a71899f5affa4f18d78:3517d2ed-9429-af34-ad52-34278391cbc8::"
+		model["id"] = "c40e55a5-0833-4748-b032-b8e8cfe6e135"
 		model["name"] = "my-log-sink"
-		model["etag"] = "c3a43545a7f2675970671ac3a57b8db067a1866b2222e1b950ee8da612e347c6"
+		model["etag"] = "822b4b5423e225206c1d75666595714a11925cd0f82b229839864443d6c3c049"
 		model["type"] = "logs"
-		model["created_at"] = "2024-06-20T18:30:00.143156Z"
-		model["updated_at"] = "2024-06-20T18:30:00.143156Z"
+		model["created_at"] = "2024-06-20T18:30:00.143Z"
+		model["updated_at"] = "2024-06-20T18:30:00.143Z"
+		model["log_sink_crn"] = "crn:v1:bluemix:public:logs:eu-de:a/4516b8fa0a174a71899f5affa4f18d78:cfef55c6-cdfe-48c8-b882-aefc271532e4::"
 		model["parameters"] = []map[string]interface{}{targetParametersTypeLogsModel}
 
 		assert.Equal(t, result, model)
 	}
 
-	targetParametersTypeLogsModel := new(ibmcloudlogsroutingv0.TargetParametersTypeLogs)
+	targetParametersTypeLogsModel := new(logsroutingv1.TargetParametersTypeLogs)
 	targetParametersTypeLogsModel.Host = core.StringPtr("www.example.com")
 	targetParametersTypeLogsModel.Port = core.Int64Ptr(int64(8080))
 
-	model := new(ibmcloudlogsroutingv0.TargetTypeLogs)
-	model.ID = CreateMockUUID("8717db99-2cfb-4ba6-a033-89c994c2e9f0")
-	model.LogSinkCRN = core.StringPtr("crn:v1:bluemix:public:logs:eu-de:a/4516b8fa0a174a71899f5affa4f18d78:3517d2ed-9429-af34-ad52-34278391cbc8::")
+	model := new(logsroutingv1.Target)
+	model.ID = CreateMockUUID("c40e55a5-0833-4748-b032-b8e8cfe6e135")
 	model.Name = core.StringPtr("my-log-sink")
-	model.Etag = core.StringPtr("c3a43545a7f2675970671ac3a57b8db067a1866b2222e1b950ee8da612e347c6")
+	model.Etag = core.StringPtr("822b4b5423e225206c1d75666595714a11925cd0f82b229839864443d6c3c049")
 	model.Type = core.StringPtr("logs")
-	model.CreatedAt = core.StringPtr("2024-06-20T18:30:00.143156Z")
-	model.UpdatedAt = core.StringPtr("2024-06-20T18:30:00.143156Z")
+	model.CreatedAt = CreateMockDateTime("2024-06-20T18:30:00.143Z")
+	model.UpdatedAt = CreateMockDateTime("2024-06-20T18:30:00.143Z")
+	model.LogSinkCrn = core.StringPtr("crn:v1:bluemix:public:logs:eu-de:a/4516b8fa0a174a71899f5affa4f18d78:cfef55c6-cdfe-48c8-b882-aefc271532e4::")
 	model.Parameters = targetParametersTypeLogsModel
 
-	result, err := logsrouting.ResourceIBMLogsRouterTenantTargetTypeLogsToMap(model)
+	result, err := logsrouting.ResourceIbmLogsRouterTenantTargetToMap(model)
 	assert.Nil(t, err)
 	checkResult(result)
 }
 
-func TestResourceIBMLogsRouterTenantTargetParametersTypeLogsToMap(t *testing.T) {
+func TestResourceIbmLogsRouterTenantTargetParametersTypeLogsToMap(t *testing.T) {
 	checkResult := func(result map[string]interface{}) {
 		model := make(map[string]interface{})
 		model["host"] = "www.example.com"
@@ -345,47 +179,104 @@ func TestResourceIBMLogsRouterTenantTargetParametersTypeLogsToMap(t *testing.T) 
 		assert.Equal(t, result, model)
 	}
 
-	model := new(ibmcloudlogsroutingv0.TargetParametersTypeLogs)
+	model := new(logsroutingv1.TargetParametersTypeLogs)
 	model.Host = core.StringPtr("www.example.com")
 	model.Port = core.Int64Ptr(int64(1))
 
-	result, err := logsrouting.ResourceIBMLogsRouterTenantTargetParametersTypeLogsToMap(model)
+	result, err := logsrouting.ResourceIbmLogsRouterTenantTargetParametersTypeLogsToMap(model)
 	assert.Nil(t, err)
 	checkResult(result)
 }
 
-func TestResourceIBMLogsRouterTenantMapToTargetTypePrototype(t *testing.T) {
-	checkResult := func(result ibmcloudlogsroutingv0.TargetTypePrototypeIntf) {
-		targetParametersTypeLogDnaPrototypeModel := new(ibmcloudlogsroutingv0.TargetParametersTypeLogDnaPrototype)
-		targetParametersTypeLogDnaPrototypeModel.Host = core.StringPtr("www.example.com")
-		targetParametersTypeLogDnaPrototypeModel.Port = core.Int64Ptr(int64(1))
+func TestResourceIbmLogsRouterTenantTargetTypeLogsToMap(t *testing.T) {
+	checkResult := func(result map[string]interface{}) {
+		targetParametersTypeLogsModel := make(map[string]interface{})
+		targetParametersTypeLogsModel["host"] = "www.example.com"
+		targetParametersTypeLogsModel["port"] = int(8080)
 
-		model := new(ibmcloudlogsroutingv0.TargetTypePrototype)
-		model.LogSinkCRN = core.StringPtr("crn:v1:bluemix:public:logdna:eu-de:a/3516b8fa0a174a71899f5affa4f18d78:3517d2ed-9429-af34-ad52-34278391cbc8::")
-		model.Name = core.StringPtr("my-log-sink")
-		model.Parameters = targetParametersTypeLogDnaPrototypeModel
+		model := make(map[string]interface{})
+		model["id"] = "c40e55a5-0833-4748-b032-b8e8cfe6e135"
+		model["name"] = "my-log-sink"
+		model["etag"] = "822b4b5423e225206c1d75666595714a11925cd0f82b229839864443d6c3c049"
+		model["type"] = "logs"
+		model["created_at"] = "2024-06-20T18:30:00.143Z"
+		model["updated_at"] = "2024-06-20T18:30:00.143Z"
+		model["log_sink_crn"] = "crn:v1:bluemix:public:logs:eu-de:a/4516b8fa0a174a71899f5affa4f18d78:cfef55c6-cdfe-48c8-b882-aefc271532e4::"
+		model["parameters"] = []map[string]interface{}{targetParametersTypeLogsModel}
 
 		assert.Equal(t, result, model)
 	}
 
-	targetParametersTypeLogDnaPrototypeModel := make(map[string]interface{})
-	targetParametersTypeLogDnaPrototypeModel["host"] = "www.example.com"
-	targetParametersTypeLogDnaPrototypeModel["port"] = int(1)
-	targetParametersTypeLogDnaPrototypeModel["access_credential"] = "ingestion-secret"
+	targetParametersTypeLogsModel := new(logsroutingv1.TargetParametersTypeLogs)
+	targetParametersTypeLogsModel.Host = core.StringPtr("www.example.com")
+	targetParametersTypeLogsModel.Port = core.Int64Ptr(int64(8080))
 
-	model := make(map[string]interface{})
-	model["log_sink_crn"] = "crn:v1:bluemix:public:logdna:eu-de:a/3516b8fa0a174a71899f5affa4f18d78:3517d2ed-9429-af34-ad52-34278391cbc8::"
-	model["name"] = "my-log-sink"
-	model["parameters"] = []interface{}{targetParametersTypeLogDnaPrototypeModel}
+	model := new(logsroutingv1.TargetTypeLogs)
+	model.ID = CreateMockUUID("c40e55a5-0833-4748-b032-b8e8cfe6e135")
+	model.Name = core.StringPtr("my-log-sink")
+	model.Etag = core.StringPtr("822b4b5423e225206c1d75666595714a11925cd0f82b229839864443d6c3c049")
+	model.Type = core.StringPtr("logs")
+	model.CreatedAt = CreateMockDateTime("2024-06-20T18:30:00.143Z")
+	model.UpdatedAt = CreateMockDateTime("2024-06-20T18:30:00.143Z")
+	model.LogSinkCrn = core.StringPtr("crn:v1:bluemix:public:logs:eu-de:a/4516b8fa0a174a71899f5affa4f18d78:cfef55c6-cdfe-48c8-b882-aefc271532e4::")
+	model.Parameters = targetParametersTypeLogsModel
 
-	result, err := logsrouting.ResourceIBMLogsRouterTenantMapToTargetTypePrototype(model)
+	result, err := logsrouting.ResourceIbmLogsRouterTenantTargetTypeLogsToMap(model)
 	assert.Nil(t, err)
 	checkResult(result)
 }
 
-func TestResourceIBMLogsRouterTenantMapToTargetParametersTypeLogDnaPrototype(t *testing.T) {
-	checkResult := func(result *ibmcloudlogsroutingv0.TargetParametersTypeLogDnaPrototype) {
-		model := new(ibmcloudlogsroutingv0.TargetParametersTypeLogDnaPrototype)
+func TestResourceIbmLogsRouterTenantWriteStatusToMap(t *testing.T) {
+	checkResult := func(result map[string]interface{}) {
+		model := make(map[string]interface{})
+		model["status"] = "success"
+		model["reason_for_last_failure"] = "Logs endpoint is not reachable. Received status code: 403"
+		model["last_failure"] = "2024-10-14T10:49:09.000Z"
+
+		assert.Equal(t, result, model)
+	}
+
+	model := new(logsroutingv1.WriteStatus)
+	model.Status = core.StringPtr("success")
+	model.ReasonForLastFailure = core.StringPtr("Logs endpoint is not reachable. Received status code: 403")
+	model.LastFailure = CreateMockDateTime("2024-10-14T10:49:09.000Z")
+
+	result, err := logsrouting.ResourceIbmLogsRouterTenantWriteStatusToMap(model)
+	assert.Nil(t, err)
+	checkResult(result)
+}
+
+func TestResourceIbmLogsRouterTenantMapToTargetPrototype(t *testing.T) {
+	checkResult := func(result logsroutingv1.TargetPrototypeIntf) {
+		targetParametersTypeLogsPrototypeModel := new(logsroutingv1.TargetParametersTypeLogsPrototype)
+		targetParametersTypeLogsPrototypeModel.Host = core.StringPtr("www.example.com")
+		targetParametersTypeLogsPrototypeModel.Port = core.Int64Ptr(int64(1))
+
+		model := new(logsroutingv1.TargetPrototype)
+		model.Name = core.StringPtr("my-log-sink")
+		model.LogSinkCrn = core.StringPtr("crn:v1:bluemix:public:logs:eu-de:a/4516b8fa0a174a71899f5affa4f18d78:cfef55c6-cdfe-48c8-b882-aefc271532e4::")
+		model.Parameters = targetParametersTypeLogsPrototypeModel
+
+		assert.Equal(t, result, model)
+	}
+
+	targetParametersTypeLogsPrototypeModel := make(map[string]interface{})
+	targetParametersTypeLogsPrototypeModel["host"] = "www.example.com"
+	targetParametersTypeLogsPrototypeModel["port"] = int(1)
+
+	model := make(map[string]interface{})
+	model["name"] = "my-log-sink"
+	model["log_sink_crn"] = "crn:v1:bluemix:public:logs:eu-de:a/4516b8fa0a174a71899f5affa4f18d78:cfef55c6-cdfe-48c8-b882-aefc271532e4::"
+	model["parameters"] = []interface{}{targetParametersTypeLogsPrototypeModel}
+
+	result, err := logsrouting.ResourceIbmLogsRouterTenantMapToTargetPrototype(model)
+	assert.Nil(t, err)
+	checkResult(result)
+}
+
+func TestResourceIbmLogsRouterTenantMapToTargetParametersTypeLogsPrototype(t *testing.T) {
+	checkResult := func(result *logsroutingv1.TargetParametersTypeLogsPrototype) {
+		model := new(logsroutingv1.TargetParametersTypeLogsPrototype)
 		model.Host = core.StringPtr("www.example.com")
 		model.Port = core.Int64Ptr(int64(1))
 
@@ -395,51 +286,21 @@ func TestResourceIBMLogsRouterTenantMapToTargetParametersTypeLogDnaPrototype(t *
 	model := make(map[string]interface{})
 	model["host"] = "www.example.com"
 	model["port"] = int(1)
-	model["access_credential"] = "ingestion-secret"
 
-	result, err := logsrouting.ResourceIBMLogsRouterTenantMapToTargetParametersTypeLogDnaPrototype(model)
+	result, err := logsrouting.ResourceIbmLogsRouterTenantMapToTargetParametersTypeLogsPrototype(model)
 	assert.Nil(t, err)
 	checkResult(result)
 }
 
-func TestResourceIBMLogsRouterTenantMapToTargetTypePrototypeTargetTypeLogDnaPrototype(t *testing.T) {
-	checkResult := func(result *ibmcloudlogsroutingv0.TargetTypePrototypeTargetTypeLogDnaPrototype) {
-		targetParametersTypeLogDnaPrototypeModel := new(ibmcloudlogsroutingv0.TargetParametersTypeLogDnaPrototype)
-		targetParametersTypeLogDnaPrototypeModel.Host = core.StringPtr("www.example.com")
-		targetParametersTypeLogDnaPrototypeModel.Port = core.Int64Ptr(int64(8080))
-
-		model := new(ibmcloudlogsroutingv0.TargetTypePrototypeTargetTypeLogDnaPrototype)
-		model.LogSinkCRN = core.StringPtr("crn:v1:bluemix:public:logdna:eu-de:a/3516b8fa0a174a71899f5affa4f18d78:3517d2ed-9429-af34-ad52-34278391cbc8::")
-		model.Name = core.StringPtr("my-log-sink")
-		model.Parameters = targetParametersTypeLogDnaPrototypeModel
-
-		assert.Equal(t, result, model)
-	}
-
-	targetParametersTypeLogDnaPrototypeModel := make(map[string]interface{})
-	targetParametersTypeLogDnaPrototypeModel["host"] = "www.example.com"
-	targetParametersTypeLogDnaPrototypeModel["port"] = int(8080)
-	targetParametersTypeLogDnaPrototypeModel["access_credential"] = "an-ingestion-secret"
-
-	model := make(map[string]interface{})
-	model["log_sink_crn"] = "crn:v1:bluemix:public:logdna:eu-de:a/3516b8fa0a174a71899f5affa4f18d78:3517d2ed-9429-af34-ad52-34278391cbc8::"
-	model["name"] = "my-log-sink"
-	model["parameters"] = []interface{}{targetParametersTypeLogDnaPrototypeModel}
-
-	result, err := logsrouting.ResourceIBMLogsRouterTenantMapToTargetTypePrototypeTargetTypeLogDnaPrototype(model)
-	assert.Nil(t, err)
-	checkResult(result)
-}
-
-func TestResourceIBMLogsRouterTenantMapToTargetTypePrototypeTargetTypeLogsPrototype(t *testing.T) {
-	checkResult := func(result *ibmcloudlogsroutingv0.TargetTypePrototypeTargetTypeLogsPrototype) {
-		targetParametersTypeLogsPrototypeModel := new(ibmcloudlogsroutingv0.TargetParametersTypeLogsPrototype)
+func TestResourceIbmLogsRouterTenantMapToTargetPrototypeTargetTypeLogsPrototype(t *testing.T) {
+	checkResult := func(result *logsroutingv1.TargetPrototypeTargetTypeLogsPrototype) {
+		targetParametersTypeLogsPrototypeModel := new(logsroutingv1.TargetParametersTypeLogsPrototype)
 		targetParametersTypeLogsPrototypeModel.Host = core.StringPtr("www.example.com")
 		targetParametersTypeLogsPrototypeModel.Port = core.Int64Ptr(int64(8080))
 
-		model := new(ibmcloudlogsroutingv0.TargetTypePrototypeTargetTypeLogsPrototype)
-		model.LogSinkCRN = core.StringPtr("crn:v1:bluemix:public:logs:eu-de:a/4516b8fa0a174a71899f5affa4f18d78:3517d2ed-9429-af34-ad52-34278391cbc8::")
+		model := new(logsroutingv1.TargetPrototypeTargetTypeLogsPrototype)
 		model.Name = core.StringPtr("my-log-sink")
+		model.LogSinkCrn = core.StringPtr("crn:v1:bluemix:public:logs:eu-de:a/4516b8fa0a174a71899f5affa4f18d78:cfef55c6-cdfe-48c8-b882-aefc271532e4::")
 		model.Parameters = targetParametersTypeLogsPrototypeModel
 
 		assert.Equal(t, result, model)
@@ -450,29 +311,11 @@ func TestResourceIBMLogsRouterTenantMapToTargetTypePrototypeTargetTypeLogsProtot
 	targetParametersTypeLogsPrototypeModel["port"] = int(8080)
 
 	model := make(map[string]interface{})
-	model["log_sink_crn"] = "crn:v1:bluemix:public:logs:eu-de:a/4516b8fa0a174a71899f5affa4f18d78:3517d2ed-9429-af34-ad52-34278391cbc8::"
 	model["name"] = "my-log-sink"
+	model["log_sink_crn"] = "crn:v1:bluemix:public:logs:eu-de:a/4516b8fa0a174a71899f5affa4f18d78:cfef55c6-cdfe-48c8-b882-aefc271532e4::"
 	model["parameters"] = []interface{}{targetParametersTypeLogsPrototypeModel}
 
-	result, err := logsrouting.ResourceIBMLogsRouterTenantMapToTargetTypePrototypeTargetTypeLogsPrototype(model)
-	assert.Nil(t, err)
-	checkResult(result)
-}
-
-func TestResourceIBMLogsRouterTenantMapToTargetParametersTypeLogsPrototype(t *testing.T) {
-	checkResult := func(result *ibmcloudlogsroutingv0.TargetParametersTypeLogsPrototype) {
-		model := new(ibmcloudlogsroutingv0.TargetParametersTypeLogsPrototype)
-		model.Host = core.StringPtr("www.example.com")
-		model.Port = core.Int64Ptr(int64(1))
-
-		assert.Equal(t, result, model)
-	}
-
-	model := make(map[string]interface{})
-	model["host"] = "www.example.com"
-	model["port"] = int(1)
-
-	result, err := logsrouting.ResourceIBMLogsRouterTenantMapToTargetParametersTypeLogsPrototype(model)
+	result, err := logsrouting.ResourceIbmLogsRouterTenantMapToTargetPrototypeTargetTypeLogsPrototype(model)
 	assert.Nil(t, err)
 	checkResult(result)
 }

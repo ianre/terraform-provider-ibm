@@ -1,50 +1,43 @@
 provider "ibm" {
   ibmcloud_api_key = var.ibmcloud_api_key
-  region = "us-east"
 }
 
-provider "ibm" {
-  ibmcloud_api_key = var.ibmcloud_api_key
-  region = "eu-de"
-  alias = "provider-eu-de"
-}
-
-// Provision logs_router_tenant resource instance
-resource "ibm_logs_router_tenant" "logs_router_tenant_instance" {
-  name = var.logs_router_tenant_name
-  region = "us-east"
-    targets {
-    log_sink_crn = "crn:v1:bluemix:public:logs:us-east:a/7246b8fa0a174a71899f5affa4f18d78:3517d2ed-9429-af34-ad52-34278391cbc8::"
-    name = "my-cloud-logs-target"
-    parameters {
-      host = "www.example-2.com"
-      port = 443
-    }
-  }
-}
-
-resource "ibm_logs_router_tenant" "logs_router_tenant_instance_eu_de" {
-  provider = ibm.provider-eu-de
-  name = "eu-de-tenant"
-  region = "eu-de"
+// Provision logs-router_tenant resource instance
+resource "ibm_logs-router_tenant" "logs-router_tenant_instance" {
+  ibm_api_version = var.logs-router_tenant_ibm_api_version
+  name = var.logs-router_tenant_name
   targets {
-    log_sink_crn = "crn:v1:bluemix:public:logs:eu-de:a/7246b8fa0a174a71899f5affa4f18d78:3517d2ed-ad52-af34-af34-34278391cbc8::"
-    name = "my-logs-target"
+    id = "9fab83da-98cb-4f18-a7ba-b6f0435c9673"
+    name = "my-log-sink"
+    etag = "822b4b5423e225206c1d75666595714a11925cd0f82b229839864443d6c3c049"
+    type = "logs"
+    created_at = "2024-06-20T18:30:00.143Z"
+    updated_at = "2024-06-20T18:30:00.143Z"
+    log_sink_crn = "crn:v1:bluemix:public:logs:eu-de:a/4516b8fa0a174a71899f5affa4f18d78:cfef55c6-cdfe-48c8-b882-aefc271532e4::"
     parameters {
-      host = "www.example-1.com"
-      port = 443
+      host = "www.example.com"
+      port = 1
     }
   }
 }
 
-// Create logs_router_tenants data source
-data "ibm_logs_router_tenants" "logs_router_tenants_instance" {
-  name = ibm_logs_router_tenant.logs_router_tenant_instance.name
-  region = ibm_logs_router_tenant.logs_router_tenant_instance.region
+// Data source is not linked to a resource instance
+// Uncomment if an existing data source instance exists
+/*
+// Create logs-router_tenants data source
+data "ibm_logs-router_tenants" "logs-router_tenants_instance" {
+  ibm_api_version = var.logs-router_tenants_ibm_api_version
+  name = var.logs-router_tenants_name
 }
+*/
 
-// Create logs_router_targets data source
-data "ibm_logs_router_targets" "logs_router_targets_instance" {
-  tenant_id = ibm_logs_router_tenant.logs_router_tenant_instance.id
-  region = ibm_logs_router_tenant.logs_router_tenant_instance.region
+// Data source is not linked to a resource instance
+// Uncomment if an existing data source instance exists
+/*
+// Create logs-router_targets data source
+data "ibm_logs-router_targets" "logs-router_targets_instance" {
+  ibm_api_version = var.logs-router_targets_ibm_api_version
+  tenant_id = var.logs-router_targets_tenant_id
+  name = var.logs-router_targets_name
 }
+*/

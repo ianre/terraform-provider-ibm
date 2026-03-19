@@ -3,11 +3,11 @@
 These examples illustrate how to use the resources and data sources associated with IBM Cloud Logs Routing.
 
 The following resources are supported:
-* ibm_logs_router_tenant
+* ibm_logs-router_tenant
 
 The following data sources are supported:
-* ibm_logs_router_tenants
-* ibm_logs_router_targets
+* ibm_logs-router_tenants
+* ibm_logs-router_targets
 
 ## Usage
 
@@ -23,20 +23,13 @@ Run `terraform destroy` when you don't need these resources.
 
 ## IBM Cloud Logs Routing resources
 
-### Resource: ibm_logs_router_tenant
+### Resource: ibm_logs-router_tenant
 
 ```hcl
-resource "ibm_logs_router_tenant" "logs_router_tenant_instance" {
-  name = var.logs_router_tenant_name
-  region = "us-east"
-  targets {
-    log_sink_crn = "crn:v1:bluemix:public:logs:eu-de:a/7246b8fa0a174a71899f5affa4f18d78:3517d2ed-9429-af34-ad52-34278391cbc8::"
-    name = "my-log-sink"
-    parameters {
-      host = "www.example.com"
-      port = 443
-    }
-  }
+resource "ibm_logs-router_tenant" "logs-router_tenant_instance" {
+  ibm_api_version = var.logs-router_tenant_ibm_api_version
+  name = var.logs-router_tenant_name
+  targets = var.logs-router_tenant_targets
 }
 ```
 
@@ -45,32 +38,28 @@ resource "ibm_logs_router_tenant" "logs_router_tenant_instance" {
 | Name | Description | Type | Required |
 |------|-------------|------|---------|
 | ibmcloud\_api\_key | IBM Cloud API key | `string` | true |
+| ibm_api_version | Requests the version of the API as of a date in the format YYYY-MM-DD. Any date up to the current date can be provided. Specify the current date to request the latest version. | `string` | true |
 | name | The name for this tenant. The name is regionally unique across all tenants in the account. | `string` | true |
-| region | The region to onboard this tenant. | `string` | true |
 | targets | List of targets. | `list()` | true |
-| targets.log_sink_crn | CRN of the Cloud Logs instance to sends logs to | `string` | true |
-| targets.name | The name for this target. The name is regionally unique for this tenant. | `string` | true |
-| targets.parameters.host | Host name of the log-sink | `string` | true |
-| targets.parameters.port | Network port of the log-sink | `integer` | true |
 
 #### Outputs
 
 | Name | Description |
 |------|-------------|
-| created_at | Time stamp the tenant was originally created. |
-| updated_at | Time stamp the tenant was last updated. |
-| crn | Cloud resource name of the tenant. |
+| created_at | Timestamp the tenant was originally created. |
+| updated_at | Timestamp the tenant was last updated. |
+| crn | Cloud resource name of the tenant. Must be a valid CRN. |
 | etag | Resource version identifier. |
-| targets | List of targets. |
+| write_status | The status of the write attempt to the target with the provided endpoint parameters. |
 
 ## IBM Cloud Logs Routing data sources
 
-### Data source: ibm_logs_router_tenants
+### Data source: ibm_logs-router_tenants
 
 ```hcl
-data "ibm_logs_router_tenants" "logs_router_tenants_instance" {
-  name = var.logs_router_tenants_name
-  region = "us-east"
+data "ibm_logs-router_tenants" "logs-router_tenants_instance" {
+  ibm_api_version = var.logs-router_tenants_ibm_api_version
+  name = var.logs-router_tenants_name
 }
 ```
 
@@ -78,8 +67,8 @@ data "ibm_logs_router_tenants" "logs_router_tenants_instance" {
 
 | Name | Description | Type | Required |
 |------|-------------|------|---------|
-| name | The name of a tenant. | `string` | true |
-| region | The region to query the tenant. | `string` | true |
+| ibm_api_version | Requests the version of the API as of a date in the format YYYY-MM-DD. Any date up to the current date can be provided. Specify the current date to request the latest version. | `string` | true |
+| name | The name for this tenant. The name is regionally unique across all tenants in the account. | `string` | false |
 
 #### Outputs
 
@@ -87,12 +76,13 @@ data "ibm_logs_router_tenants" "logs_router_tenants_instance" {
 |------|-------------|
 | tenants | List of tenants in the account. |
 
-### Data source: ibm_logs_router_targets
+### Data source: ibm_logs-router_targets
 
 ```hcl
-data "ibm_logs_router_targets" "logs_router_targets_instance" {
-  tenant_id = var.logs_router_targets_tenant_id
-  region = "us-east"
+data "ibm_logs-router_targets" "logs-router_targets_instance" {
+  ibm_api_version = var.logs-router_targets_ibm_api_version
+  tenant_id = var.logs-router_targets_tenant_id
+  name = var.logs-router_targets_name
 }
 ```
 
@@ -100,15 +90,23 @@ data "ibm_logs_router_targets" "logs_router_targets_instance" {
 
 | Name | Description | Type | Required |
 |------|-------------|------|---------|
+| ibm_api_version | Requests the version of the API as of a date in the format YYYY-MM-DD. Any date up to the current date can be provided. Specify the current date to request the latest version. | `string` | true |
 | tenant_id | The instance ID of the tenant. | `` | true |
-| region | The region where the tenant for this target exists, | `string` | true |
-| name | Optional: Name of the tenant target. | `string` | false |
+| name | The name for this tenant target. The name must be unique across all targets for this tenant. | `string` | false |
 
 #### Outputs
 
 | Name | Description |
 |------|-------------|
 | targets | List of targets of a tenant. |
+
+## Assumptions
+
+1. TODO
+
+## Notes
+
+1. TODO
 
 ## Requirements
 
@@ -121,36 +119,3 @@ data "ibm_logs_router_targets" "logs_router_targets_instance" {
 | Name | Version |
 |------|---------|
 | ibm | 1.13.1 |
-
-## Notes
-
-### The Logs Routing URL can be set in endpoints.json
-
-You can declare the service endpoints in a JSON file and either reference this file in your provider block by using the `endpoints_file_path` argument, or export the path to your file with the `IBMCLOUD_ENDPOINTS_FILE_PATH` or `IC_ENDPOINTS_FILE_PATH` environment variable.
-To use the provided endpoints file, set the visibility to either `public` or `pivate` by using the `IC_VISIBILITY` or `IBMCLOUD_VISIBILITY` environment variable, or by setting the `visibility` field in your provider block.
-
-**Example**:
-
-```json
-{
-    "IBMCLOUD_LOGS_ROUTING_API_ENDPOINT":{
-        "public":{
-            "us-south":"<endpoint>",
-            "us-east":"<endpoint>",
-            "eu-gb":"<endpoint>",
-            "eu-de":"<endpoint>"
-        },
-        "private":{
-            "us-south":"<endpoint>",
-            "us-east":"<endpoint>",
-            "eu-gb":"<endpoint>",
-            "eu-de":"<endpoint>"
-        }
-    }
-}
-```
-
-As of 28 March 2024 the Log Analysis service is deprecated and will no longer be supported as of 30 March 2025.
-IBM Cloud Logs will stop supporting `logdna` targets at the same time and no logs will be routed to these type of targets after that date.
-You should make sure that you have configured your tenant to direct your logs to another destination before 30 March 2025.
-Any `logdna` targets still configured after 30 April 2025 will be removed automatically from your tenant configuration.
